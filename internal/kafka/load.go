@@ -7,6 +7,8 @@ import (
     "fmt"
     "log"
     "os"
+    "errors"
+    "regexp"
 )
 
 func InitKafka(kafkaConfig *KafkaConfig) (sarama.SyncProducer, error) {    
@@ -49,7 +51,11 @@ func InitKafka(kafkaConfig *KafkaConfig) (sarama.SyncProducer, error) {
     }
 
 
-    producer, err := newProducer(config, kafkaConfig)
+    config.Producer.Partitioner = sarama.NewRandomPartitioner
+    config.Producer.RequiredAcks = sarama.WaitForAll
+    config.Producer.Return.Successes = true
+    producer, err := sarama.NewSyncProducer(kafkaConfig.Brokers, config)
+
     if err != nil {
         fmt.Println("Could not create producer: ", err)
         return nil, err
@@ -58,17 +64,11 @@ func InitKafka(kafkaConfig *KafkaConfig) (sarama.SyncProducer, error) {
     return producer, nil
 }
 
-
-func newProducer(config *sarama.Config, kafkaConfig *KafkaConfig) (sarama.SyncProducer, error) {
-    config.Producer.Partitioner = sarama.NewRandomPartitioner
-    config.Producer.RequiredAcks = sarama.WaitForAll
-    config.Producer.Return.Successes = true
-    producer, err := sarama.NewSyncProducer(kafkaConfig.Brokers, config)
-
-    return producer, err
-}
-
 func SendMessage(producer sarama.SyncProducer, topic string, message string) (error) {
+    if !isTopicNameValid(topic) {
+        return errors.New("Topic name is invalid")
+    }
+
     msg := &sarama.ProducerMessage{
         Topic:     topic,
         Partition: -1,
@@ -82,4 +82,21 @@ func SendMessage(producer sarama.SyncProducer, topic string, message string) (er
     }
 
     return nil
+}
+
+func isTopicNameValid(topic string) (bool) {
+    if len(topic) == 0 {
+        log.Printf("%s is invalid topic name. must not be empty\n", topic)
+        return false
+    } 
+    
+    pattern := "^[a-zA-Z0-9._-]+$"
+    regex := regexp.MustCompile(pattern)
+
+    if !regex.MatchString(topic) {
+        log.Printf("%s is invalid topic name. Must only have character a-z A-Z 0-9 . - _\n", topic)
+        return false
+    }
+
+    return true
 }
