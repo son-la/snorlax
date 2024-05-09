@@ -12,4 +12,8 @@ push:
 
 .PHONY: run
 run:
-	docker run --rm $(DOCKER_IMAGE_NAME):$(VERSION) $(ARG)
+	go run snorlax.go serve 
+
+.PHONY: test
+test:
+	go test -v ./... --cover 
