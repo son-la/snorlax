@@ -10,10 +10,10 @@ build:
 push:
 	docker push -t $(DOCKER_IMAGE_NAME):$(VERSION)
 
-.PHONY: prog
-prog: 
-	docker run --rm $(DOCKER_IMAGE_NAME):$(VERSION)
-
 .PHONY: run
 run:
-	docker run --rm $(DOCKER_IMAGE_NAME):$(VERSION) $(ARG)
+	go run snorlax.go serve 
+
+.PHONY: test
+test:
+	go test -v ./... --cover 
