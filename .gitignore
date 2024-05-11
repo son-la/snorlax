@@ -1,3 +1,4 @@
 **.crt
 **.yaml
 bin/*
+coverage.txt
