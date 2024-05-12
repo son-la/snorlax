@@ -8,6 +8,7 @@ on:
   push:
     branches:
       - 'main'
+      - 'e2e'
     tags:
       - 'v*'
 
@@ -42,4 +43,8 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  trigger_e2e:
+    name: Trigger E2E execution
+    runs-on: ubuntu-latest
     
