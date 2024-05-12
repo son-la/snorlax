@@ -1,8 +1,5 @@
 name: ci
-on:
-  push:
-    branches-ignore:
-      - 'e2e'
+on: [push]
 jobs:
   prepare:
     runs-on: ubuntu-latest
