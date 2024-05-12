@@ -1,0 +1,22 @@
+name: Trigger E2E execution
+on:
+  workflow_run:
+    workflows:
+      - merge
+    types:
+      - completed
+jobs:
+  trigger-e2e-workflow:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v6
+    with:
+        github-token: ${{ secrets.PAT }} # Fine-grained GitHub PAT that was saved as repository secret
+        script: |
+          await github.rest.actions.createworkflowDispatch({
+              owner: 'snorlax',
+              repo: 'snorlax-e2e',
+              workflow_id: 'e2e.yml',
+              ref: 'main'
+          })
