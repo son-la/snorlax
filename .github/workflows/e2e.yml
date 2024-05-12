@@ -13,9 +13,9 @@ jobs:
     with:
         github-token: ${{ secrets.PAT }} # Fine-grained GitHub PAT that was saved as repository secret
         script: |
-        await github.rest.actions.createworkflowDispatch({
-            owner: 'snorlax',
-            repo: 'snorlax-e2e',
-            workflow_id: 'e2e.yml',
-            ref: 'main'
-        })
+          await github.rest.actions.createworkflowDispatch({
+              owner: 'snorlax',
+              repo: 'snorlax-e2e',
+              workflow_id: 'e2e.yml',
+              ref: 'main'
+          })
