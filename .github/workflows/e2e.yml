@@ -1,8 +1,9 @@
 name: Trigger E2E execution
 on:
   workflow_run:
-      workflows: [merge]
-      types:
+    workflows:
+      - merge
+    types:
       - completed
 jobs:
   trigger-e2e-workflow:
