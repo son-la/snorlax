@@ -6,7 +6,12 @@ import (
 	"github.com/spf13/viper"
 
 	"log"
-	"time"
+
+	"github.com/gin-gonic/gin"
+
+
+    "github.com/son-la/snorlax/internal/handlers"
+    "github.com/son-la/snorlax/internal/middleware"
 )
 
 func serveCmd() *cobra.Command {
@@ -36,16 +41,34 @@ func serveCmd() *cobra.Command {
 				Version: appConfig.Kafka.Version,
 			}
 
-			producer, err := kafka.InitKafka(&kafkaConfig)
+			_, err := kafka.InitKafka(&kafkaConfig)
 			if err != nil {
-				log.Fatal(err)
+				log.Println(err)
 			}
 
-			d := time.Duration(5 * time.Second)
-			for {
-				kafka.SendMessage(producer, appConfig.Kafka.Topic, time.Now().String())
-				time.Sleep(d)
+			// d := time.Duration(5 * time.Second)
+			// for {
+			// 	kafka.SendMessage(producer, appConfig.Kafka.Topic, time.Now().String())
+			// 	time.Sleep(d)
+			// }
+
+			r := gin.Default()
+
+			// Public routes (do not require authentication)
+			publicRoutes := r.Group("/public")
+			{
+				publicRoutes.POST("/login", handlers.Login)
+				publicRoutes.POST("/register", handlers.Register)
 			}
+
+			// Protected routes (require authentication)
+			protectedRoutes := r.Group("/protected")
+			protectedRoutes.Use(middleware.AuthenticationMiddleware())
+			{
+				// Protected routes here
+			}
+
+			r.Run(":8080")
 		},
 	}
 

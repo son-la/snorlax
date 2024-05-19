@@ -2,3 +2,4 @@
 **.yaml
 bin/*
 coverage.txt
+.env
