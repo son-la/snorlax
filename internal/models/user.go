@@ -1,11 +1,34 @@
 package models
 
 import (
-	"github.com/google/uuid"
+	"gorm.io/gorm"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User struct {
-	ID       uuid.UUID    `json:"id"`
-	Username string `json:"username"`
-	Password string `json:"-"`
+	gorm.Model
+
+	Name     string `json:"name"`
+	Username string `json:"username" gorm:"unique"`
+	Password string `json:"password"`
+	Email    string `json:"email" gorm:"unique"`
+}
+
+func (user *User) HashPassword(password string) error {
+	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
+	if err != nil {
+		return err
+	}
+
+	user.Password = string(bytes)
+	return nil
+}
+
+func (user *User) CheckPassword(providedPassword string) error {
+	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(providedPassword))
+	if err != nil {
+		return err
+	}
+	return nil
 }
