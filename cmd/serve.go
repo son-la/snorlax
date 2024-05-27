@@ -6,6 +6,7 @@ import (
 	"github.com/son-la/snorlax/internal/controllers"
 	"github.com/son-la/snorlax/internal/database"
 	middleware "github.com/son-la/snorlax/internal/middlewares"
+	"github.com/son-la/snorlax/internal/repositories"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
@@ -54,15 +55,17 @@ func serveCmd() *cobra.Command {
 
 			// Init DB
 			connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", appConfig.Database.Username, appConfig.Database.Password, appConfig.Database.Host, appConfig.Database.Port, appConfig.Database.Database)
-			database.Connect(connectionString)
-			database.Migrate()
+			db := database.NewMySQLDB(connectionString)
+
+			userRepo := repositories.NewUserRepo(db)
+			h := controllers.NewBaseHandler(userRepo)
 
 			r := gin.Default()
 
 			api := r.Group("/api")
 			{
-				api.POST("/token", controllers.GenerateToken)
-				api.POST("/user/register", controllers.RegisterUser)
+				api.POST("/token", h.GenerateToken)
+				api.POST("/user/register", h.RegisterUser)
 				secured := api.Group("/secured").Use(middleware.AuthenticationMiddleware())
 				{
 					secured.GET("/ping", controllers.Ping)

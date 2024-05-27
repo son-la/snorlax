@@ -15,6 +15,11 @@ type User struct {
 	Email    string `json:"email" gorm:"unique"`
 }
 
+type UserRepository interface {
+	FindByEmail(email string) *User
+	Save(user *User) error
+}
+
 func (user *User) HashPassword(password string) error {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
 	if err != nil {

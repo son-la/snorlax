@@ -1,6 +1,7 @@
 # snorlax
 
 ## TODO
+0. Implement GORM + Repository model for testing
 1. Testing, testing and more testing! 
 2. CI pipeline
 3. Develop snorlax UI with registration/ login functionality
@@ -38,3 +39,10 @@ database:
   username: USERNAME
   password: PASSWORD
 ```
+
+
+
+# Ref
+
+* https://dakaii.medium.com/repository-pattern-in-golang-d22d3fa76d91
+* 
