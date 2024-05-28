@@ -1,10 +1,10 @@
 package utils
 
 import (
-	"time"
-	"github.com/golang-jwt/jwt/v5"
 	"fmt"
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"time"
 )
 
 // TODO: Import secret key for signing JWT token
@@ -20,7 +20,7 @@ func GenerateToken(userID uuid.UUID) (string, error) {
 	return token.SignedString(secretKey)
 }
 
-// VerifyToken verifies a token JWT validate 
+// VerifyToken verifies a token JWT validate
 func VerifyToken(tokenString string) (jwt.MapClaims, error) {
 	// Parse the token
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
