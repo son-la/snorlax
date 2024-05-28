@@ -46,7 +46,7 @@ type TokenRequest struct {
 
 func (h *BaseHandler) GenerateToken(context *gin.Context) {
 	var request TokenRequest
-	if err := context.ShouldBindJSON(&request); err != nil {
+	if err := context.BindJSON(&request); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		context.Abort()
 		return
