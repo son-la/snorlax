@@ -1,30 +1,48 @@
 # snorlax
 
+## TODO
+0. Implement GORM + Repository model for testing
+1. Testing, testing and more testing! 
+2. CI pipeline
+3. Develop snorlax UI with registration/ login functionality
+4. Integrate snorlax with Okta for SSO
+
+
 
 ## Development environment
 
-## Run local
+1. Setup local k8s for dependencies
+* Refer to `https://github.com/son-la/snorlax-devsetup`
+* Port forwarding mysql
+2. Create `config.yaml` 
 ```
-make run ARG="--version"
+---
+kafka: 
+  brokers:
+  - "localhost:30002"
+
+  useTLS: true
+  caFile: "ca.crt"
+  version: "3.7.0"
+
+  authentcation:
+    username: KAFKA_USER
+    password: KAFKA_PASSWORD
+    algorithm: sha512
+
+  topic: test
+  
+database:
+  host: MYSQL_HOST
+  port: FORWARDED_PORT
+  database: USER_DB
+  username: USERNAME
+  password: PASSWORD
 ```
 
-### Test chart on local k3s
-1. Start k3s cluster
-```
-k3d cluster create test-cluster --servers 1 --agents 3 -p "30000-30100:30000-30100@server:0"
-```
-
-2. Flux bootstrap. Permission for Github PAT https://fluxcd.io/flux/installation/bootstrap/github/#github-organization
-```
-flux bootstrap github \
-  --owner=son-la \
-  --repository=flux-fleet \
-  --branch=main \
-  --path=clusters/snorlax-local \
-  --token-auth \
-  --components-extra=image-reflector-controller,image-automation-controller \
-  --version=v2.2.3
-```
 
 
-3. To test Kafka, use Java 11.0.22
+# Ref
+
+* https://dakaii.medium.com/repository-pattern-in-golang-d22d3fa76d91
+* 

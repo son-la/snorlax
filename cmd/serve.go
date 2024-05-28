@@ -1,12 +1,18 @@
 package cmd
 
 import (
-	"github.com/son-la/snorlax/internal/kafka"
+	"fmt"
+
+	"github.com/son-la/snorlax/internal/controllers"
+	"github.com/son-la/snorlax/internal/database"
+	middleware "github.com/son-la/snorlax/internal/middlewares"
+	"github.com/son-la/snorlax/internal/repositories"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 
 	"log"
-	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 func serveCmd() *cobra.Command {
@@ -23,29 +29,50 @@ func serveCmd() *cobra.Command {
 				return
 			}
 
-			kafkaConfig := kafka.KafkaConfig{
-				Brokers: appConfig.Kafka.Brokers,
-				UseTLS:  appConfig.Kafka.UseTLS,
-				CAFile:  appConfig.Kafka.CAFile,
-				Topic:   appConfig.Kafka.Topic,
-				Authentcation: kafka.Authentcation{
-					Username:  appConfig.Kafka.Authentcation.Username,
-					Password:  appConfig.Kafka.Authentcation.Password,
-					Algorithm: appConfig.Kafka.Authentcation.Algorithm,
-				},
-				Version: appConfig.Kafka.Version,
+			// kafkaConfig := kafka.KafkaConfig{
+			// 	Brokers: appConfig.Kafka.Brokers,
+			// 	UseTLS:  appConfig.Kafka.UseTLS,
+			// 	CAFile:  appConfig.Kafka.CAFile,
+			// 	Topic:   appConfig.Kafka.Topic,
+			// 	Authentcation: kafka.Authentcation{
+			// 		Username:  appConfig.Kafka.Authentcation.Username,
+			// 		Password:  appConfig.Kafka.Authentcation.Password,
+			// 		Algorithm: appConfig.Kafka.Authentcation.Algorithm,
+			// 	},
+			// 	Version: appConfig.Kafka.Version,
+			// }
+
+			// _, err := kafka.InitKafka(&kafkaConfig)
+			// if err != nil {
+			// 	log.Println(err)
+			// }
+
+			// d := time.Duration(5 * time.Second)
+			// for {
+			// 	kafka.SendMessage(producer, appConfig.Kafka.Topic, time.Now().String())
+			// 	time.Sleep(d)
+			// }
+
+			// Init DB
+			connectionString := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?parseTime=true", appConfig.Database.Username, appConfig.Database.Password, appConfig.Database.Host, appConfig.Database.Port, appConfig.Database.Database)
+			db := database.NewMySQLDB(connectionString)
+
+			userRepo := repositories.NewUserRepo(db)
+			h := controllers.NewBaseHandler(userRepo)
+
+			r := gin.Default()
+
+			api := r.Group("/api")
+			{
+				api.POST("/token", h.GenerateToken)
+				api.POST("/user/register", h.RegisterUser)
+				secured := api.Group("/secured").Use(middleware.AuthenticationMiddleware())
+				{
+					secured.GET("/ping", controllers.Ping)
+				}
 			}
 
-			producer, err := kafka.InitKafka(&kafkaConfig)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			d := time.Duration(5 * time.Second)
-			for {
-				kafka.SendMessage(producer, appConfig.Kafka.Topic, time.Now().String())
-				time.Sleep(d)
-			}
+			r.Run(":8080")
 		},
 	}
 
