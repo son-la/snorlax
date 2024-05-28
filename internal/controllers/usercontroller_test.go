@@ -26,6 +26,28 @@ func (m *mockUserRepository) FindByEmail(email string) *models.User {
 
 func TestRegisterUser(t *testing.T) {
 
+	tests := map[string]struct {
+		input  string
+		result int
+	}{
+		"valid input 1": {
+			input:  `{"username": "example_user", "password": "example_password", "name": "user", "email": "test_user@gmail.com"}`,
+			result: http.StatusCreated,
+		},
+		"valid input 2": {
+			input:  `{"username": "example_user", "password": "verysecurepassword", "name": "user2", "email": "test_user232@gmail.com"}`,
+			result: http.StatusCreated,
+		},
+		"missing field 1": {
+			input:  `{"username": "example_user", "password": "example_password", "name": "user"}`,
+			result: http.StatusBadRequest,
+		},
+		"missing field 2": {
+			input:  `{"username": "example_user", "password": "example_password", "email": "test_user@gmail.com"}`,
+			result: http.StatusBadRequest,
+		},
+	}
+
 	mockUserRepo := new(mockUserRepository)
 	mockUserRepo.On("Save", mock.Anything).Return(nil)
 
@@ -36,42 +58,25 @@ func TestRegisterUser(t *testing.T) {
 	handler := NewBaseHandler(mockUserRepo)
 	router.POST("/register", handler.RegisterUser)
 
-	t.Run("Normal user input", func(t *testing.T) {
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	})
+			reqBody := []byte(test.input)
 
-	t.Run("Normal user input", func(t *testing.T) {
-		reqBody := []byte(`{"username": "example_user", "password": "example_password", "name": "user", "email": "test_user@gmail.com"}`)
+			req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(reqBody))
+			req.Header.Set("Content-Type", "application/json")
+			assert.NoError(t, err)
 
-		req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-		assert.NoError(t, err)
+			// Create a new HTTP response recorder
+			recorder := httptest.NewRecorder()
 
-		// Create a new HTTP response recorder
-		recorder := httptest.NewRecorder()
+			// Serve the HTTP request
+			router.ServeHTTP(recorder, req)
 
-		// Serve the HTTP request
-		router.ServeHTTP(recorder, req)
-
-		// Assert the response status code
-		assert.Equal(t, http.StatusCreated, recorder.Code)
-	})
-
-	t.Run("Missing user field", func(t *testing.T) {
-		reqBody := []byte(`{"username": "example_user", "password": "example_password", "name": "user"}`)
-
-		req, err := http.NewRequest("POST", "/register", bytes.NewBuffer(reqBody))
-		req.Header.Set("Content-Type", "application/json")
-		assert.NoError(t, err)
-
-		// Create a new HTTP response recorder
-		recorder := httptest.NewRecorder()
-
-		// Serve the HTTP request
-		router.ServeHTTP(recorder, req)
-
-		// Assert the response status code
-		assert.Equal(t, http.StatusBadRequest, recorder.Code)
-	})
-
+			// Assert the response status code
+			assert.Equal(t, test.result, recorder.Code)
+		})
+	}
 }
